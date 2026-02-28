@@ -83,12 +83,12 @@
             <div class="header-actions">
                 <span class="admin-user">
                     <i class="fas fa-user-shield"></i>
-                    {{ auth()->user()->name }}
+                    <span class="admin-user-name">{{ auth()->user()->name }}</span>
                 </span>
                 <form action="{{ route('admin.logout') }}" method="POST" style="margin:0">
                     @csrf
                     <button type="submit" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i> خروج
+                        <i class="fas fa-sign-out-alt"></i><span class="btn-logout-text"> خروج</span>
                     </button>
                 </form>
             </div>

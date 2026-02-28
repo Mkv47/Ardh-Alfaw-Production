@@ -504,6 +504,8 @@ tbody tr:hover { background: #fafbfc; }
 }
 
 @media (max-width: 768px) {
+    body { overflow-x: hidden; }
+
     .sidebar {
         transform: translateX(100%);
     }
@@ -518,7 +520,19 @@ tbody tr:hover { background: #fafbfc; }
 
     .admin-content { padding: 16px; }
 
-    .admin-header { padding: 14px 16px; }
+    .admin-header { padding: 12px 14px; gap: 8px; }
+
+    .admin-header h1 { font-size: 1rem; }
+
+    /* Hide username text on mobile, keep icon only */
+    .admin-user-name { display: none; }
+    .admin-user { gap: 0; }
+
+    /* Compact logout button */
+    .btn-logout { padding: 7px 10px; font-size: .8rem; }
+    .btn-logout-text { display: none; }
+
+    .header-actions { gap: 8px; }
 
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
@@ -528,10 +542,14 @@ tbody tr:hover { background: #fafbfc; }
     .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
 
     .login-box { padding: 30px 20px; margin: 20px; }
+
+    /* Make tables scrollable on mobile */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 @media (max-width: 480px) {
     .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .stat-card  { padding: 16px 14px; gap: 10px; }
     .stat-info .num { font-size: 1.4rem; }
+    .admin-content { padding: 12px; }
 }
