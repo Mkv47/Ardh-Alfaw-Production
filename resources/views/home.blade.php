@@ -39,6 +39,9 @@
     <section class="hero" id="home">
         <div class="hero-particles" id="particles"></div>
         <div class="hero-content">
+            @if(!empty($s['logo']))
+                <img src="{{ Storage::url($s['logo']) }}" alt="أرض الفاو" class="hero-logo animate-fade-up">
+            @endif
             <h1 class="hero-title animate-fade-up">{{ $s['hero_title'] ?? 'شركة أرض الفاو' }}</h1>
             <p class="hero-subtitle animate-fade-up delay-1">{{ $s['hero_subtitle'] ?? 'للنقل والخدمات البحرية' }}</p>
             <p class="hero-location animate-fade-up delay-2">
