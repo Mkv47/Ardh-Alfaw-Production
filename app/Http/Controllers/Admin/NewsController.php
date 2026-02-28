@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SavesCroppedImage;
 use App\Http\Controllers\Controller;
 use App\Models\News;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
+    use SavesCroppedImage;
     public function index()
     {
         return view('admin.news.index', ['items' => News::orderBy('published_at', 'desc')->get()]);
@@ -29,12 +31,11 @@ class NewsController extends Controller
             'category'     => 'required|string|max:100',
             'published_at' => 'required|date',
             'sort_order'   => 'nullable|integer',
-            'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('images/news', 'public');
+        if ($request->filled('image_cropped')) {
+            $data['image'] = $this->saveCroppedImage($request->input('image_cropped'), 'images/news');
         }
 
         News::create($data);
@@ -56,13 +57,12 @@ class NewsController extends Controller
             'category'     => 'required|string|max:100',
             'published_at' => 'required|date',
             'sort_order'   => 'nullable|integer',
-            'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        if ($request->hasFile('image')) {
+        if ($request->filled('image_cropped')) {
             if ($news->image) Storage::disk('public')->delete($news->image);
-            $data['image'] = $request->file('image')->store('images/news', 'public');
+            $data['image'] = $this->saveCroppedImage($request->input('image_cropped'), 'images/news');
         } elseif ($request->boolean('remove_image')) {
             if ($news->image) Storage::disk('public')->delete($news->image);
             $data['image'] = null;

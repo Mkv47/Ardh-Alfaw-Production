@@ -16,16 +16,7 @@
         </div>
         <div class="form-group span-2">
             <label>صورة المشروع (PNG / JPG / WebP — حد أقصى 5MB)</label>
-            @if($item->image)
-                <div style="margin-bottom:10px">
-                    <img src="{{ Storage::url($item->image) }}" alt="صورة حالية" style="max-height:140px;border-radius:8px;border:2px solid #e2e8f0;">
-                </div>
-                <label style="font-weight:400;font-size:.9rem">
-                    <input type="checkbox" name="remove_image" value="1"> حذف الصورة الحالية
-                </label><br><br>
-            @endif
-            <input type="file" name="image" accept="image/*">
-            <small style="color:var(--gray)">اتركه فارغاً للإبقاء على الأيقونة أو الصورة الحالية</small>
+            @include('admin.partials.image-cropper', ['currentImage' => $item->image ?? null])
         </div>
         <div class="form-group">
             <label>الأيقونة (احتياطي إن لم تُرفع صورة) *</label>

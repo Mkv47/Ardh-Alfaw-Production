@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SavesCroppedImage;
 use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class TeamMemberController extends Controller
 {
+    use SavesCroppedImage;
     public function index()
     {
         return view('admin.team.index', ['items' => TeamMember::orderBy('sort_order')->get()]);
@@ -28,12 +30,11 @@ class TeamMemberController extends Controller
             'icon'       => 'required|string|max:100',
             'whatsapp'   => 'nullable|string|max:20',
             'sort_order' => 'nullable|integer',
-            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('images/team', 'public');
+        if ($request->filled('image_cropped')) {
+            $data['image'] = $this->saveCroppedImage($request->input('image_cropped'), 'images/team');
         }
 
         TeamMember::create($data);
@@ -54,13 +55,12 @@ class TeamMemberController extends Controller
             'icon'       => 'required|string|max:100',
             'whatsapp'   => 'nullable|string|max:20',
             'sort_order' => 'nullable|integer',
-            'image'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        if ($request->hasFile('image')) {
+        if ($request->filled('image_cropped')) {
             if ($team->image) Storage::disk('public')->delete($team->image);
-            $data['image'] = $request->file('image')->store('images/team', 'public');
+            $data['image'] = $this->saveCroppedImage($request->input('image_cropped'), 'images/team');
         } elseif ($request->boolean('remove_image')) {
             if ($team->image) Storage::disk('public')->delete($team->image);
             $data['image'] = null;
