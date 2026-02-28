@@ -218,6 +218,13 @@ img { max-width: 100%; }
 
 .card-body { padding: 24px; }
 
+.card-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
 /* ── Stats grid (dashboard) ── */
 .stats-grid {
     display: grid;
@@ -506,50 +513,97 @@ tbody tr:hover { background: #fafbfc; }
 @media (max-width: 768px) {
     body { overflow-x: hidden; }
 
+    /* ── Sidebar ── */
     .sidebar {
         transform: translateX(100%);
+        overflow-y: auto;
     }
 
     .sidebar.open {
         transform: translateX(0);
     }
 
+    .sidebar-nav a {
+        padding: 14px 20px; /* bigger touch target */
+    }
+
     .sidebar-toggle { display: block; }
 
+    /* ── Main layout ── */
     .admin-main { margin-right: 0; }
 
     .admin-content { padding: 16px; }
 
+    /* ── Header ── */
     .admin-header { padding: 12px 14px; gap: 8px; }
-
     .admin-header h1 { font-size: 1rem; }
 
-    /* Hide username text on mobile, keep icon only */
     .admin-user-name { display: none; }
     .admin-user { gap: 0; }
 
-    /* Compact logout button */
     .btn-logout { padding: 7px 10px; font-size: .8rem; }
     .btn-logout-text { display: none; }
 
     .header-actions { gap: 8px; }
 
+    /* ── Dashboard stats ── */
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
+    /* ── Forms ── */
     .form-grid { grid-template-columns: 1fr; }
     .form-group.span-2 { grid-column: span 1; }
 
-    .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    /* Prevent iOS auto-zoom on input focus (needs 16px) */
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px;
+    }
 
+    /* ── Page header ── */
+    .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .page-head .btn { width: 100%; justify-content: center; }
+
+    /* ── Cards ── */
+    .card-header { flex-wrap: wrap; gap: 10px; }
+    .card-body { padding: 16px; }
+
+    /* ── Tables: horizontal scroll ── */
+    .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius);
+    }
+
+    thead th, tbody td {
+        padding: 10px 10px;
+        font-size: .82rem;
+        white-space: nowrap;
+    }
+
+    /* ── Action buttons: icon-only but bigger touch target ── */
+    .actions { gap: 6px; }
+    .btn.btn-sm { padding: 8px 10px; min-width: 36px; justify-content: center; }
+
+    /* ── Login ── */
     .login-box { padding: 30px 20px; margin: 20px; }
 
-    /* Make tables scrollable on mobile */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* ── Settings logo section ── */
+    .settings-logo-wrap { flex-direction: column !important; align-items: flex-start !important; }
+
+    /* ── Quick actions (dashboard) ── */
+    .quick-actions-wrap { flex-direction: column; }
+    .quick-actions-wrap .btn { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {
-    .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .stat-card  { padding: 16px 14px; gap: 10px; }
-    .stat-info .num { font-size: 1.4rem; }
-    .admin-content { padding: 12px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card  { padding: 14px 12px; gap: 10px; }
+    .stat-icon  { width: 42px; height: 42px; font-size: 1.1rem; }
+    .stat-info .num { font-size: 1.3rem; }
+    .admin-content { padding: 10px; }
+    .card-body { padding: 12px; }
+
+    /* Stack action buttons vertically on very small screens */
+    .actions { flex-wrap: wrap; }
 }

@@ -66,7 +66,7 @@
     <div class="card-header">
         <h2><i class="fas fa-bolt"></i> إجراءات سريعة</h2>
     </div>
-    <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="card-body quick-actions-wrap" style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="{{ route('admin.settings') }}"       class="btn btn-primary"><i class="fas fa-sliders-h"></i> تعديل الإعدادات</a>
         <a href="{{ route('admin.services.create') }}" class="btn btn-edit"><i class="fas fa-plus"></i> إضافة خدمة</a>
         <a href="{{ route('admin.projects.create') }}" class="btn btn-edit"><i class="fas fa-plus"></i> إضافة مشروع</a>

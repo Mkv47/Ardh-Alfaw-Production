@@ -10,7 +10,7 @@
         <div class="card-header">
             <h2><i class="fas fa-image"></i> شعار الشركة</h2>
         </div>
-        <div class="card-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div class="card-body settings-logo-wrap" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
             @php $logoPath = \App\Models\Setting::get('logo'); @endphp
             @if($logoPath)
                 <img src="{{ Storage::url($logoPath) }}" alt="الشعار الحالي"
