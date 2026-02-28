@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - لوحة التحكم</title>
+    @php $faviconPath = \App\Models\Setting::get('logo'); @endphp
+    @if($faviconPath)
+        <link rel="icon" type="image/png" href="{{ Storage::url($faviconPath) }}">
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">

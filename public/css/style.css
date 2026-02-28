@@ -1632,40 +1632,30 @@ img {
 
     /* ── Hero ── */
     .hero {
-        min-height: 100svh;
-        align-items: flex-start;
-        padding-top: 90px;
+        min-height: 100svh; /* safe area on iOS */
     }
 
     .hero-content {
-        padding: 10px 16px 30px;
+        padding: 20px 16px;
     }
 
     .hero-logo {
         width: 140px;
         height: 140px;
-        margin-bottom: 10px;
     }
 
     .hero-title {
         font-size: 2.2rem;
-        margin-bottom: 6px;
     }
 
     .hero-subtitle {
         font-size: 1.15rem;
-        margin-bottom: 10px;
-    }
-
-    .hero-location {
-        margin-bottom: 24px;
     }
 
     .hero-stats {
         gap: 16px;
         flex-wrap: wrap;
         justify-content: center;
-        margin-bottom: 24px;
     }
 
     .stat-number {

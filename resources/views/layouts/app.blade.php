@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>شركة أرض الفاو | للنقل والخدمات البحرية</title>
     <meta name="description" content="شركة أرض الفاو للنقل والخدمات البحرية - البصرة، العراق. خدمات النقل البحري والبري منذ 2018">
+    @php $faviconPath = \App\Models\Setting::get('logo'); @endphp
+    @if($faviconPath)
+        <link rel="icon" type="image/png" href="{{ Storage::url($faviconPath) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
