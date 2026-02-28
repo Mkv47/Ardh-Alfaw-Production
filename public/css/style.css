@@ -70,7 +70,7 @@ img {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 1060;
     background: transparent;
     padding: 20px 0;
     transition: var(--transition);
