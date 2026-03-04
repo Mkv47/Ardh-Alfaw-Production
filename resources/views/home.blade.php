@@ -36,12 +36,15 @@
     <div class="nav-overlay" id="navOverlay"></div>
 
     <!-- Hero Section -->
+    @php $heroLogo = !empty($s['hero_logo']) ? $s['hero_logo'] : ($s['logo'] ?? null); @endphp
     <section class="hero" id="home">
         <div class="hero-particles" id="particles"></div>
+        @if($heroLogo)
+            @php $heroLogoSize = $s['hero_logo_size'] ?? 600; @endphp
+            <img src="{{ Storage::url($heroLogo) }}" alt="" class="hero-bg-logo" aria-hidden="true"
+                 style="width:{{ $heroLogoSize }}px;height:{{ $heroLogoSize }}px">
+        @endif
         <div class="hero-content">
-            @if(!empty($s['logo']))
-                <img src="{{ Storage::url($s['logo']) }}" alt="أرض الفاو" class="hero-logo animate-fade-up">
-            @endif
             <h1 class="hero-title animate-fade-up">{{ $s['hero_title'] ?? 'شركة أرض الفاو' }}</h1>
             <p class="hero-subtitle animate-fade-up delay-1">{{ $s['hero_subtitle'] ?? 'للنقل والخدمات البحرية' }}</p>
             <p class="hero-location animate-fade-up delay-2">

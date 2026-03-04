@@ -3,33 +3,57 @@
 
 @section('content')
 
-{{-- Logo Upload --}}
+{{-- Navbar Logo Upload --}}
 <form action="{{ route('admin.settings.logo') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card settings-section" style="margin-bottom:24px">
         <div class="card-header">
-            <h2><i class="fas fa-image"></i> شعار الشركة</h2>
+            <h2><i class="fas fa-image"></i> شعار الشريط العلوي (Navbar)</h2>
         </div>
-        <div class="card-body settings-logo-wrap" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-            @php $logoPath = \App\Models\Setting::get('logo'); @endphp
-            @if($logoPath)
-                <img src="{{ Storage::url($logoPath) }}" alt="الشعار الحالي"
-                     style="max-height:90px;max-width:200px;border-radius:8px;border:1px solid #ddd;object-fit:contain;background:#f8f9fa;padding:6px;">
-            @else
-                <div style="width:120px;height:80px;border-radius:8px;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:2rem">
-                    <i class="fas fa-anchor"></i>
-                </div>
-            @endif
-            <div>
-                <div class="form-group" style="margin-bottom:0">
-                    <label style="display:block;margin-bottom:6px">رفع شعار جديد (PNG/JPG/WebP، بحد أقصى 2 ميجابايت)</label>
-                    <input type="file" name="logo" accept="image/*" required>
+        <div class="card-body">
+            @include('admin.partials.logo-cropper', [
+                'currentImage' => \App\Models\Setting::get('logo'),
+                'inputId'      => 'navLogo',
+                'hiddenName'   => 'logo_cropped',
+            ])
+        </div>
+        <div class="card-footer" style="padding:12px 20px;text-align:left">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> حفظ
+            </button>
+        </div>
+    </div>
+</form>
+
+{{-- Hero Logo Upload --}}
+<form action="{{ route('admin.settings.hero-logo') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <div class="card settings-section" style="margin-bottom:24px">
+        <div class="card-header">
+            <h2><i class="fas fa-star"></i> شعار الصفحة الرئيسية (Hero)</h2>
+        </div>
+        <div class="card-body">
+            @include('admin.partials.logo-cropper', [
+                'currentImage' => \App\Models\Setting::get('hero_logo'),
+                'inputId'      => 'heroLogo',
+                'hiddenName'   => 'hero_logo_cropped',
+            ])
+            <div class="form-group" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                @php $heroLogoSize = \App\Models\Setting::get('hero_logo_size') ?? 600; @endphp
+                <label style="display:block;margin-bottom:6px">
+                    حجم العلامة المائية الدائرية: <strong><span id="heroLogoSizeVal">{{ $heroLogoSize }}</span> px</strong>
+                </label>
+                <input type="range" name="hero_logo_size" min="100" max="1200" value="{{ $heroLogoSize }}"
+                       oninput="document.getElementById('heroLogoSizeVal').textContent=this.value"
+                       style="width:100%;accent-color:var(--teal-accent)">
+                <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#888;margin-top:2px">
+                    <span>100px</span><span>1200px</span>
                 </div>
             </div>
         </div>
         <div class="card-footer" style="padding:12px 20px;text-align:left">
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-upload"></i> رفع الشعار
+                <i class="fas fa-save"></i> حفظ
             </button>
         </div>
     </div>

@@ -33,7 +33,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('settings',  [SettingsController::class, 'index'])->name('settings');
         Route::put('settings',  [SettingsController::class, 'update'])->name('settings.update');
-        Route::post('settings/logo', [SettingsController::class, 'updateLogo'])->name('settings.logo');
+        Route::post('settings/logo',      [SettingsController::class, 'updateLogo'])->name('settings.logo');
+        Route::post('settings/hero-logo', [SettingsController::class, 'updateHeroLogo'])->name('settings.hero-logo');
 
         Route::resource('services', ServiceController::class)->except(['show']);
         Route::resource('projects', ProjectController::class)->except(['show']);

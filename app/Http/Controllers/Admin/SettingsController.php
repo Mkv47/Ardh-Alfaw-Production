@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\SavesCroppedImage;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
+    use SavesCroppedImage;
+
     public function index()
     {
         $keys = [
@@ -39,11 +42,35 @@ class SettingsController extends Controller
 
     public function updateLogo(Request $request)
     {
-        $request->validate(['logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048']);
-        $old = Setting::get('logo');
-        if ($old) Storage::disk('public')->delete($old);
-        $path = $request->file('logo')->store('images', 'public');
-        Setting::set('logo', $path);
-        return back()->with('success', 'تم تحديث الشعار بنجاح');
+        $request->validate([
+            'logo_cropped' => 'nullable|string',
+            'logo_size'    => 'nullable|integer|min:24|max:200',
+        ]);
+        if ($request->filled('logo_cropped')) {
+            $old = Setting::get('logo');
+            if ($old) Storage::disk('public')->delete($old);
+            Setting::set('logo', $this->saveCroppedImage($request->input('logo_cropped'), 'images'));
+        }
+        if ($request->filled('logo_size')) {
+            Setting::set('logo_size', $request->input('logo_size'));
+        }
+        return back()->with('success', 'تم تحديث شعار الشريط العلوي بنجاح');
+    }
+
+    public function updateHeroLogo(Request $request)
+    {
+        $request->validate([
+            'hero_logo_cropped' => 'nullable|string',
+            'hero_logo_size'    => 'nullable|integer|min:100|max:1200',
+        ]);
+        if ($request->filled('hero_logo_cropped')) {
+            $old = Setting::get('hero_logo');
+            if ($old) Storage::disk('public')->delete($old);
+            Setting::set('hero_logo', $this->saveCroppedImage($request->input('hero_logo_cropped'), 'images'));
+        }
+        if ($request->filled('hero_logo_size')) {
+            Setting::set('hero_logo_size', $request->input('hero_logo_size'));
+        }
+        return back()->with('success', 'تم تحديث شعار الصفحة الرئيسية بنجاح');
     }
 }
