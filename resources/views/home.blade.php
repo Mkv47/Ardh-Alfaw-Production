@@ -40,9 +40,12 @@
     <section class="hero" id="home">
         <div class="hero-particles" id="particles"></div>
         @if($heroLogo)
-            @php $heroLogoSize = $s['hero_logo_size'] ?? 600; @endphp
+            @php
+                $heroLogoSize    = $s['hero_logo_size'] ?? 600;
+                $heroLogoOpacity = isset($s['hero_logo_opacity']) ? $s['hero_logo_opacity'] / 100 : 0.15;
+            @endphp
             <img src="{{ Storage::url($heroLogo) }}" alt="" class="hero-bg-logo" aria-hidden="true"
-                 style="width:{{ $heroLogoSize }}px;height:{{ $heroLogoSize }}px">
+                 style="width:{{ $heroLogoSize }}px;height:{{ $heroLogoSize }}px;opacity:{{ $heroLogoOpacity }}">
         @endif
         <div class="hero-content">
             <h1 class="hero-title animate-fade-up">{{ $s['hero_title'] ?? 'شركة أرض الفاو' }}</h1>

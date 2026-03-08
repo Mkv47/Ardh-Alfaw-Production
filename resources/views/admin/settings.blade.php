@@ -50,6 +50,18 @@
                     <span>100px</span><span>1200px</span>
                 </div>
             </div>
+            <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                @php $heroLogoOpacity = \App\Models\Setting::get('hero_logo_opacity') ?? 15; @endphp
+                <label style="display:block;margin-bottom:6px">
+                    شفافية العلامة المائية (Opacity): <strong><span id="heroLogoOpacityVal">{{ $heroLogoOpacity }}</span>%</strong>
+                </label>
+                <input type="range" name="hero_logo_opacity" min="0" max="100" value="{{ $heroLogoOpacity }}"
+                       oninput="document.getElementById('heroLogoOpacityVal').textContent=this.value"
+                       style="width:100%;accent-color:var(--teal-accent)">
+                <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#888;margin-top:2px">
+                    <span>0%</span><span>100%</span>
+                </div>
+            </div>
         </div>
         <div class="card-footer" style="padding:12px 20px;text-align:left">
             <button type="submit" class="btn btn-primary">

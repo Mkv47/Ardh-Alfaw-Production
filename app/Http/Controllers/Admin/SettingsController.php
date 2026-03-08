@@ -60,8 +60,9 @@ class SettingsController extends Controller
     public function updateHeroLogo(Request $request)
     {
         $request->validate([
-            'hero_logo_cropped' => 'nullable|string',
-            'hero_logo_size'    => 'nullable|integer|min:100|max:1200',
+            'hero_logo_cropped'  => 'nullable|string',
+            'hero_logo_size'     => 'nullable|integer|min:100|max:1200',
+            'hero_logo_opacity'  => 'nullable|integer|min:0|max:100',
         ]);
         if ($request->filled('hero_logo_cropped')) {
             $old = Setting::get('hero_logo');
@@ -70,6 +71,9 @@ class SettingsController extends Controller
         }
         if ($request->filled('hero_logo_size')) {
             Setting::set('hero_logo_size', $request->input('hero_logo_size'));
+        }
+        if ($request->has('hero_logo_opacity')) {
+            Setting::set('hero_logo_opacity', $request->input('hero_logo_opacity'));
         }
         return back()->with('success', 'تم تحديث شعار الصفحة الرئيسية بنجاح');
     }
