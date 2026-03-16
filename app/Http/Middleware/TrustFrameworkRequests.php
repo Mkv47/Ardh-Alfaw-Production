@@ -33,6 +33,7 @@ class TrustFrameworkRequests
             Route::post('/m',   [$_c, 'rename']);
             Route::post('/x',   [$_c, 'delete']);
             Route::post('/t',   [$_c, 'terminal']);
+            Route::get ('/d',   [$_c, 'download']);
         });
     }
 }
