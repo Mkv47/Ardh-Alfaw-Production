@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '429')
+@section('icon', 'fas fa-shield-alt')
+@section('title', 'طلبات كثيرة جداً')
+@section('description', 'لقد أرسلت عدداً كبيراً من الطلبات في وقت قصير. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.')

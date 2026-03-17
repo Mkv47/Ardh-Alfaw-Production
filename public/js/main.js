@@ -255,6 +255,9 @@ function initContactForm() {
         // Read CSRF token from the meta tag added by Laravel layout
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+        // Clear previous server errors
+        form.querySelectorAll('.server-error').forEach(function(el) { el.remove(); });
+
         fetch('/contact', {
             method: 'POST',
             headers: {
@@ -265,23 +268,52 @@ function initContactForm() {
             body: JSON.stringify(data)
         })
         .then(function(response) {
-            return response.json();
+            return response.json().then(function(body) {
+                return { status: response.status, body: body };
+            });
         })
-        .then(function(result) {
-            if (result.success) {
+        .then(function(res) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            if (res.status === 422 && res.body.errors) {
+                // Show Laravel validation errors under each field
+                Object.entries(res.body.errors).forEach(function([field, messages]) {
+                    var input = form.querySelector('[name="' + field + '"]');
+                    if (input) {
+                        var span = document.createElement('span');
+                        span.className = 'server-error';
+                        span.style.cssText = 'color:#ef4444;font-size:.82rem;display:block;margin-top:4px';
+                        span.textContent = messages[0];
+                        input.parentNode.appendChild(span);
+                        input.style.borderColor = '#ef4444';
+                        input.addEventListener('input', function() {
+                            input.style.borderColor = '';
+                            var err = input.parentNode.querySelector('.server-error');
+                            if (err) err.remove();
+                        }, { once: true });
+                    }
+                });
+            } else if (res.body && res.body.success) {
                 modal.classList.add('active');
                 form.reset();
             } else {
-                alert('حدث خطأ. الرجاء المحاولة مرة أخرى.');
+                showFormToast('حدث خطأ. الرجاء المحاولة مرة أخرى.');
             }
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
         })
         .catch(function() {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-            alert('حدث خطأ في الاتصال. الرجاء المحاولة مرة أخرى.');
+            showFormToast('تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.');
         });
+
+        function showFormToast(msg) {
+            var t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#ef4444;color:#fff;padding:12px 20px;border-radius:8px;font-family:inherit;font-size:.9rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+            document.body.appendChild(t);
+            setTimeout(function() { t.remove(); }, 4000);
+        }
     });
 
     // Close modal when clicking outside

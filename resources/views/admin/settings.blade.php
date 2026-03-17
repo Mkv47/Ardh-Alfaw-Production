@@ -181,10 +181,55 @@
         </div>
     </div>
 
+    {{-- Section Order --}}
+    <div class="card settings-section" style="margin-bottom:24px">
+        <div class="card-header">
+            <h2><i class="fas fa-sort"></i> ترتيب الأقسام</h2>
+        </div>
+        <div class="card-body">
+            <p style="color:var(--gray);font-size:.875rem;margin-bottom:16px">اسحب الأقسام لتغيير ترتيب ظهورها على الصفحة الرئيسية. (الرئيسية، من نحن، وتواصل معنا ثابتة)</p>
+            @php
+                $allSections = ['services'=>'خدماتنا','projects'=>'مشاريعنا','news'=>'الأخبار','team'=>'فريقنا','gallery'=>'معرض الصور','tenders'=>'المناقصات','clients'=>'عملاؤنا','certificates'=>'الشهادات'];
+                $savedOrder  = json_decode(\App\Models\Setting::get('section_order') ?? '[]', true) ?: array_keys($allSections);
+                $mergedOrder = array_unique([...$savedOrder, ...array_keys($allSections)]);
+            @endphp
+            <input type="hidden" name="section_order" id="sectionOrderInput"
+                   value="{{ \App\Models\Setting::get('section_order') ?? json_encode(array_keys($allSections)) }}">
+            <ul id="sectionSortable" style="list-style:none;padding:0;margin:0;max-width:420px">
+                @foreach($mergedOrder as $key)
+                @if(isset($allSections[$key]))
+                <li data-key="{{ $key }}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:grab;user-select:none">
+                    <i class="fas fa-grip-vertical" style="color:#94a3b8;cursor:grab"></i>
+                    <span style="font-weight:600;color:var(--primary-navy)">{{ $allSections[$key] }}</span>
+                </li>
+                @endif
+                @endforeach
+            </ul>
+        </div>
+    </div>
+
     <div class="form-actions">
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> حفظ جميع الإعدادات
         </button>
     </div>
 </form>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+// Section order drag-and-drop
+Sortable.create(document.getElementById('sectionSortable'), {
+    animation: 150,
+    ghostClass: 'sort-ghost',
+    onEnd: function() {
+        const order = [...document.querySelectorAll('#sectionSortable li')].map(li => li.dataset.key);
+        document.getElementById('sectionOrderInput').value = JSON.stringify(order);
+    }
+});
+</script>
+<style>
+.sort-ghost { opacity:.4; background:#e0f2fe !important; border-color:#7dd3fc !important; }
+#sectionSortable li:hover { border-color:var(--teal); }
+#sectionSortable li { transition: border-color .15s; }
+</style>
 @endsection

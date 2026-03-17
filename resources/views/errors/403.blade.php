@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '403')
+@section('icon', 'fas fa-lock')
+@section('title', 'غير مصرح بالدخول')
+@section('description', 'ليس لديك صلاحية للوصول إلى هذه الصفحة.')

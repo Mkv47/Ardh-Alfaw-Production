@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '419')
+@section('icon', 'fas fa-clock')
+@section('title', 'انتهت صلاحية الجلسة')
+@section('description', 'انتهت صلاحية الصفحة بسبب انقضاء وقت الجلسة. يرجى تحديث الصفحة والمحاولة مرة أخرى.')

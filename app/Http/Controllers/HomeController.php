@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Certificate;
 use App\Models\Client;
 use App\Models\GalleryItem;
 use App\Models\News;
@@ -24,7 +25,10 @@ class HomeController extends Controller
             'teamMembers' => TeamMember::orderBy('sort_order')->get(),
             'galleryItems'=> GalleryItem::orderBy('sort_order')->get(),
             'tenders'     => Tender::orderByRaw("status = 'open' DESC")->orderBy('sort_order')->get(),
-            'clients'     => Client::orderBy('sort_order')->get(),
+            'clients'      => Client::orderBy('sort_order')->get(),
+            'certificates' => Certificate::orderBy('sort_order')->get(),
+            'sectionOrder' => json_decode(Setting::get('section_order') ?? '[]', true)
+                              ?: ['services','projects','news','team','gallery','tenders','clients','certificates'],
             's'           => $settings,
         ]);
     }

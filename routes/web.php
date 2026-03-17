@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\TenderController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\MessageController;
 use Illuminate\Support\Facades\Route;
@@ -42,7 +43,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('team',     TeamMemberController::class)->except(['show']);
         Route::resource('tenders',  TenderController::class)->except(['show']);
         Route::resource('clients',  ClientController::class)->except(['show']);
-        Route::resource('gallery',  GalleryController::class)->except(['show']);
+        Route::resource('gallery',      GalleryController::class)->except(['show']);
+        Route::resource('certificates', CertificateController::class)->except(['show']);
 
         Route::get('messages',             [MessageController::class, 'index'])->name('messages.index');
         Route::delete('messages/{message}',[MessageController::class, 'destroy'])->name('messages.destroy');

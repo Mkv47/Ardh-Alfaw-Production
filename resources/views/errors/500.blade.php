@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '500')
+@section('icon', 'fas fa-server')
+@section('title', 'خطأ في الخادم')
+@section('description', 'حدث خطأ داخلي في الخادم. نعمل على إصلاح المشكلة. يرجى المحاولة مرة أخرى بعد قليل.')

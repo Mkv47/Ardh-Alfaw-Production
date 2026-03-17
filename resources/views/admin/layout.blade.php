@@ -54,6 +54,9 @@
             <a href="{{ route('admin.gallery.index') }}" class="{{ request()->routeIs('admin.gallery*') ? 'active' : '' }}">
                 <i class="fas fa-images"></i> معرض الصور
             </a>
+            <a href="{{ route('admin.certificates.index') }}" class="{{ request()->routeIs('admin.certificates*') ? 'active' : '' }}">
+                <i class="fas fa-certificate"></i> الشهادات
+            </a>
 
             <div class="sidebar-section">الرسائل</div>
 
