@@ -32,7 +32,7 @@
            class="btn-primary"
            style="display:inline-flex;align-items:center;gap:8px;text-decoration:none">
             <i class="fas fa-file-archive"></i>
-            تحميل النسخة الاحتياطية (.zip)
+            تحميل النسخة الاحتياطية (.tar.gz)
         </a>
     </div>
 
@@ -58,7 +58,7 @@
             @csrf
             <div class="form-group" style="margin-bottom:16px">
                 <label style="font-size:.88rem;font-weight:600">اختر ملف النسخة الاحتياطية (.zip)</label>
-                <input type="file" name="backup_file" accept=".zip" required
+                <input type="file" name="backup_file" accept=".tar.gz,.tgz" required
                        style="display:block;margin-top:8px;width:100%;font-size:.88rem">
             </div>
             <button type="submit" style="background:#e53935;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.92rem;display:inline-flex;align-items:center;gap:8px">
