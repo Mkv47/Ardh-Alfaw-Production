@@ -68,6 +68,14 @@
                 @endif
             </a>
 
+            <div class="sidebar-section">النظام</div>
+            <a href="{{ route('admin.admins.index') }}" class="{{ request()->routeIs('admin.admins*') ? 'active' : '' }}">
+                <i class="fas fa-user-shield"></i> المديرون
+            </a>
+            <a href="{{ route('admin.backup.index') }}" class="{{ request()->routeIs('admin.backup*') ? 'active' : '' }}">
+                <i class="fas fa-database"></i> النسخ الاحتياطي
+            </a>
+
             <div class="sidebar-section">الموقع</div>
             <a href="{{ route('home') }}" target="_blank">
                 <i class="fas fa-external-link-alt"></i> عرض الموقع

@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\MessageController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\BackupController;
 use Illuminate\Support\Facades\Route;
 
 /* ── Public ── */
@@ -48,5 +50,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('messages',             [MessageController::class, 'index'])->name('messages.index');
         Route::delete('messages/{message}',[MessageController::class, 'destroy'])->name('messages.destroy');
+
+        Route::resource('admins', AdminUserController::class)->except(['show']);
+
+        Route::get('backup',        [BackupController::class, 'index'])->name('backup.index');
+        Route::get('backup/export', [BackupController::class, 'export'])->name('backup.export');
+        Route::post('backup/import',[BackupController::class, 'import'])->name('backup.import');
     });
 });
