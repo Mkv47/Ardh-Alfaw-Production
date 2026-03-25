@@ -31,19 +31,21 @@ class BackupController extends Controller
 
     public function export()
     {
-        $tmpDir = storage_path('app/tmp/backup_' . uniqid());
+        set_time_limit(0);
+        ini_set('memory_limit', '-1');
+
+        $tmpDir  = storage_path('app/tmp/backup_' . uniqid());
+        $tarPath = storage_path('app/tmp/ardhfaw_backup_' . now()->format('Y-m-d_His') . '.tar');
+        $gzPath  = $tarPath . '.gz';
+
         @mkdir($tmpDir, 0755, true);
-        @mkdir($tmpDir . '/storage', 0755, true);
 
         try {
-            // 1. Dump all tables to data.json
+            // 1. Dump all tables → data.json
             $data = [];
             foreach ($this->tables as $table) {
-                try {
-                    $data[$table] = DB::table($table)->get()->toArray();
-                } catch (\Exception) {
-                    $data[$table] = [];
-                }
+                try { $data[$table] = DB::table($table)->get()->toArray(); }
+                catch (\Exception) { $data[$table] = []; }
             }
             file_put_contents(
                 $tmpDir . '/data.json',
@@ -57,30 +59,59 @@ class BackupController extends Controller
                 'app'        => config('app.name'),
             ], JSON_PRETTY_PRINT));
 
-            // 3. Copy storage files into tmp dir
-            $srcStorage = storage_path('app/public');
-            if (is_dir($srcStorage)) {
-                $this->copyDirectory($srcStorage, $tmpDir . '/storage');
-            }
-
-            // 4. Build tar.gz using PharData
-            $tarPath = storage_path('app/tmp/ardhfaw_backup_' . now()->format('Y-m-d_His') . '.tar');
-            if (file_exists($tarPath))      unlink($tarPath);
-            if (file_exists($tarPath . '.gz')) unlink($tarPath . '.gz');
+            // 3. Build tar directly from storage (no intermediate copy)
+            if (file_exists($tarPath))  unlink($tarPath);
+            if (file_exists($gzPath))   unlink($gzPath);
 
             $phar = new \PharData($tarPath);
+
+            // Add JSON files
             $phar->buildFromDirectory($tmpDir);
-            $phar->compress(\Phar::GZ);     // creates .tar.gz
-            unlink($tarPath);               // remove uncompressed tar
+
+            // Add storage files under a 'storage/' prefix
+            $srcStorage = storage_path('app/public');
+            if (is_dir($srcStorage)) {
+                $it = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($srcStorage, \RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+                foreach ($it as $file) {
+                    if ($file->isFile()) {
+                        $relative = 'storage/' . ltrim(str_replace($srcStorage, '', $file->getRealPath()), '/\\');
+                        $phar->addFile($file->getRealPath(), $relative);
+                    }
+                }
+            }
+
+            // 4. Compress → .tar.gz
+            $phar->compress(\Phar::GZ);
+            unlink($tarPath);
             $this->deleteDirectory($tmpDir);
 
-            $gzPath    = $tarPath . '.gz';
-            $filename  = 'ardhfaw_backup_' . now()->format('Y-m-d_His') . '.tar.gz';
+            $filename = 'ardhfaw_backup_' . now()->format('Y-m-d_His') . '.tar.gz';
+            $size     = filesize($gzPath);
 
-            return response()->download($gzPath, $filename)->deleteFileAfterSend(true);
+            // 5. Stream in chunks so the connection never times out mid-download
+            return response()->stream(function () use ($gzPath) {
+                $handle = fopen($gzPath, 'rb');
+                while (!feof($handle)) {
+                    echo fread($handle, 1024 * 64); // 64 KB chunks
+                    ob_flush();
+                    flush();
+                }
+                fclose($handle);
+                @unlink($gzPath);
+            }, 200, [
+                'Content-Type'              => 'application/gzip',
+                'Content-Disposition'       => 'attachment; filename="' . $filename . '"',
+                'Content-Length'            => $size,
+                'Content-Transfer-Encoding' => 'binary',
+                'Cache-Control'             => 'no-cache, no-store',
+            ]);
 
         } catch (\Exception $e) {
             $this->deleteDirectory($tmpDir);
+            if (file_exists($tarPath)) @unlink($tarPath);
+            if (file_exists($gzPath))  @unlink($gzPath);
             return back()->with('error', 'فشل التصدير: ' . $e->getMessage());
         }
     }
@@ -89,8 +120,11 @@ class BackupController extends Controller
 
     public function import(Request $request)
     {
+        set_time_limit(0);
+        ini_set('memory_limit', '-1');
+
         $request->validate([
-            'backup_file' => 'required|file|max:512000',
+            'backup_file' => 'required|file|max:614400', // 600 MB
         ]);
 
         $file     = $request->file('backup_file');
@@ -102,26 +136,23 @@ class BackupController extends Controller
 
         $tmpDir = storage_path('app/tmp/restore_' . uniqid());
         @mkdir($tmpDir, 0755, true);
-
-        // Move uploaded file with .tar.gz extension so PharData recognises it
-        $tarGzPath = $tmpDir . '/backup.tar.gz';
         $file->move($tmpDir, 'backup.tar.gz');
 
         try {
-            $phar = new \PharData($tarGzPath);
+            $phar = new \PharData($tmpDir . '/backup.tar.gz');
             $phar->extractTo($tmpDir . '/extracted', null, true);
 
-            $extractedDir = $tmpDir . '/extracted';
+            $extracted = $tmpDir . '/extracted';
+            $jsonFile  = $extracted . '/data.json';
 
-            // 1. Restore DB
-            $jsonFile = $extractedDir . '/data.json';
             if (!file_exists($jsonFile)) {
-                throw new \Exception('الملف لا يحتوي على data.json — تأكد أن الملف صادر من نفس النظام');
+                throw new \Exception('الملف لا يحتوي على data.json');
             }
 
             $data = json_decode(file_get_contents($jsonFile), true);
             if (!$data) throw new \Exception('تعذّر قراءة بيانات قاعدة البيانات');
 
+            // Restore DB
             DB::transaction(function () use ($data) {
                 try { DB::statement('SET FOREIGN_KEY_CHECKS=0;'); } catch (\Exception) {}
 
@@ -130,7 +161,6 @@ class BackupController extends Controller
                         try { DB::table($table)->truncate(); } catch (\Exception) {}
                     }
                 }
-
                 foreach ($this->tables as $table) {
                     if (!empty($data[$table])) {
                         $rows = array_map(fn($r) => (array) $r, $data[$table]);
@@ -143,8 +173,8 @@ class BackupController extends Controller
                 try { DB::statement('SET FOREIGN_KEY_CHECKS=1;'); } catch (\Exception) {}
             });
 
-            // 2. Restore storage files
-            $storageSrc = $extractedDir . '/storage';
+            // Restore storage files
+            $storageSrc = $extracted . '/storage';
             if (is_dir($storageSrc)) {
                 $this->copyDirectory($storageSrc, storage_path('app/public'));
             }
