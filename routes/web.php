@@ -53,8 +53,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('admins', AdminUserController::class)->except(['show']);
 
-        Route::get('backup',        [BackupController::class, 'index'])->name('backup.index');
-        Route::get('backup/export', [BackupController::class, 'export'])->name('backup.export');
-        Route::post('backup/import',[BackupController::class, 'import'])->name('backup.import');
+        Route::get('backup',                    [BackupController::class, 'index'])->name('backup.index');
+        Route::get('backup/export',             [BackupController::class, 'export'])->name('backup.export');
+        Route::post('backup/import/chunk',      [BackupController::class, 'importChunk'])->name('backup.import.chunk');
+        Route::post('backup/import/finalize',   [BackupController::class, 'importFinalize'])->name('backup.import.finalize');
+        Route::post('backup/import',            [BackupController::class, 'import'])->name('backup.import');
     });
 });
