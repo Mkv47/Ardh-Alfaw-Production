@@ -98,106 +98,158 @@ class BackupController extends Controller
 
     public function importChunk(Request $request)
     {
-        $uploadId   = $request->input('upload_id');
-        $chunkIndex = (int) $request->input('chunk_index');
-        $totalChunks= (int) $request->input('total_chunks');
+        $uploadId    = $request->input('upload_id');
+        $chunkIndex  = (int) $request->input('chunk_index');
+        $totalChunks = (int) $request->input('total_chunks');
 
         if (!$uploadId || !$request->hasFile('chunk')) {
             return response()->json(['error' => 'بيانات غير صحيحة'], 400);
         }
 
-        $chunkDir = storage_path('app/tmp/chunks_' . $uploadId);
-        @mkdir($chunkDir, 0755, true);
+        $baseDir   = storage_path('app/public/restore_temp');
+        $tarGzPath = $baseDir . '/restore_' . $uploadId . '.tar.gz';
 
-        $request->file('chunk')->move($chunkDir, 'chunk_' . str_pad($chunkIndex, 5, '0', STR_PAD_LEFT));
+        if (!is_dir($baseDir) && !mkdir($baseDir, 0755, true) && !is_dir($baseDir)) {
+            return response()->json(['error' => 'فشل إنشاء المجلد: ' . $baseDir], 500);
+        }
 
-        $received = count(glob($chunkDir . '/chunk_*'));
+        // Chunk 0 always starts a fresh file (clears any previous partial upload)
+        if ($chunkIndex === 0 && file_exists($tarGzPath)) {
+            unlink($tarGzPath);
+        }
+
+        try {
+            $chunkPath = $request->file('chunk')->getRealPath();
+            if (!$chunkPath || !file_exists($chunkPath)) {
+                return response()->json(['error' => 'ملف القطعة المؤقت غير موجود'], 500);
+            }
+
+            $written = file_put_contents($tarGzPath, file_get_contents($chunkPath), FILE_APPEND | LOCK_EX);
+            if ($written === false) {
+                return response()->json([
+                    'error' => 'فشل كتابة القطعة إلى: ' . $tarGzPath,
+                    'writable' => is_writable($baseDir),
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'خطأ: ' . $e->getMessage()], 500);
+        }
+
+        $fileSize = file_exists($tarGzPath) ? filesize($tarGzPath) : 0;
 
         return response()->json([
-            'received'     => $received,
+            'received'     => $chunkIndex + 1,
             'total_chunks' => $totalChunks,
-            'done'         => $received >= $totalChunks,
+            'done'         => ($chunkIndex + 1) >= $totalChunks,
+            'file_size'    => $fileSize,
         ]);
     }
 
-    // ── Import: assemble chunks and restore ──────────────────────────────────
+    // ── Import: finalize in 2 steps (extract → restore) ──────────────────────
+    // Chunks are already appended directly to the tar.gz during upload,
+    // so no assembly step is needed. Each step is a separate HTTP call
+    // to avoid Hostinger's request timeout.
 
     public function importFinalize(Request $request)
     {
-        set_time_limit(0);
+        set_time_limit(300);
         ini_set('memory_limit', '-1');
 
-        $uploadId    = $request->input('upload_id');
-        $totalChunks = (int) $request->input('total_chunks');
-        $chunkDir    = storage_path('app/tmp/chunks_' . $uploadId);
-
-        if (!is_dir($chunkDir)) {
-            return response()->json(['error' => 'جلسة الرفع غير موجودة'], 400);
-        }
-
-        $tarGzPath = storage_path('app/tmp/restore_' . $uploadId . '.tar.gz');
-        $tmpDir    = storage_path('app/tmp/restore_ext_' . $uploadId);
-        @mkdir($tmpDir, 0755, true);
+        $uploadId  = $request->input('upload_id');
+        $step      = (int) $request->input('step', 1);
+        $tarGzPath = storage_path('app/public/restore_temp/restore_' . $uploadId . '.tar.gz');
+        $tmpDir    = storage_path('app/public/restore_temp/ext_' . $uploadId);
 
         try {
-            // Assemble chunks into one file
-            $out = fopen($tarGzPath, 'wb');
-            for ($i = 0; $i < $totalChunks; $i++) {
-                $chunkFile = $chunkDir . '/chunk_' . str_pad($i, 5, '0', STR_PAD_LEFT);
-                if (!file_exists($chunkFile)) {
-                    throw new \Exception("القطعة {$i} مفقودة");
+            // ── Step 1: Extract tar.gz ────────────────────────────────────────
+            if ($step === 1) {
+                $restoreDir = storage_path('app/public/restore_temp');
+                if (!file_exists($tarGzPath)) {
+                    return response()->json([
+                        'error'        => 'ملف الأرشيف غير موجود، أعد الرفع من البداية',
+                        'looking_for'  => $tarGzPath,
+                        'dir_exists'   => is_dir($restoreDir),
+                        'files_in_dir' => is_dir($restoreDir)
+                            ? array_values(array_diff(scandir($restoreDir), ['.', '..']))
+                            : [],
+                    ], 400);
                 }
-                $in = fopen($chunkFile, 'rb');
-                while (!feof($in)) fwrite($out, fread($in, 65536));
-                fclose($in);
+
+                if (!is_dir($tmpDir) && !mkdir($tmpDir, 0755, true) && !is_dir($tmpDir)) {
+                    return response()->json(['error' => 'فشل إنشاء مجلد الاستخراج'], 500);
+                }
+
+                // Try fast system tar first, fall back to PharData
+                $tarGzEscaped = escapeshellarg($tarGzPath);
+                $tmpDirEscaped = escapeshellarg($tmpDir);
+                $output = []; $code = 0;
+                if (function_exists('exec')) {
+                    exec("tar -xzf {$tarGzEscaped} -C {$tmpDirEscaped} 2>&1", $output, $code);
+                }
+
+                if (!function_exists('exec') || $code !== 0) {
+                    // Fallback to PharData
+                    $phar = new \PharData($tarGzPath);
+                    $phar->extractTo($tmpDir, null, true);
+                }
+
+                return response()->json(['success' => true, 'step' => 1]);
             }
-            fclose($out);
-            $this->deleteDirectory($chunkDir);
 
-            // Extract
-            $phar = new \PharData($tarGzPath);
-            $phar->extractTo($tmpDir, null, true);
+            // ── Step 2: Restore DB + storage ─────────────────────────────────
+            if ($step === 2) {
+                if (!is_dir($tmpDir)) {
+                    return response()->json(['error' => 'مجلد الاستخراج غير موجود، أعد الرفع من البداية'], 400);
+                }
 
-            $jsonFile = $tmpDir . '/data.json';
-            if (!file_exists($jsonFile)) {
-                throw new \Exception('الملف لا يحتوي على data.json');
-            }
+                $jsonFile = $tmpDir . '/data.json';
+                if (!file_exists($jsonFile)) {
+                    throw new \Exception('الملف لا يحتوي على data.json');
+                }
 
-            $data = json_decode(file_get_contents($jsonFile), true);
-            if (!$data) throw new \Exception('تعذّر قراءة بيانات قاعدة البيانات');
+                $data = json_decode(file_get_contents($jsonFile), true);
+                if (!$data) throw new \Exception('تعذّر قراءة بيانات قاعدة البيانات');
 
-            DB::transaction(function () use ($data) {
+                // TRUNCATE causes implicit commit in MySQL so it must be outside any transaction
                 try { DB::statement('SET FOREIGN_KEY_CHECKS=0;'); } catch (\Exception) {}
                 foreach (array_reverse($this->tables) as $table) {
                     if (isset($data[$table])) {
                         try { DB::table($table)->truncate(); } catch (\Exception) {}
                     }
                 }
-                foreach ($this->tables as $table) {
-                    if (!empty($data[$table])) {
-                        $rows = array_map(fn($r) => (array) $r, $data[$table]);
-                        foreach (array_chunk($rows, 100) as $chunk) {
-                            DB::table($table)->insert($chunk);
+
+                // Inserts are safe inside a transaction
+                DB::transaction(function () use ($data) {
+                    foreach ($this->tables as $table) {
+                        if (!empty($data[$table])) {
+                            $rows = array_map(fn($r) => (array) $r, $data[$table]);
+                            foreach (array_chunk($rows, 100) as $chunk) {
+                                DB::table($table)->insert($chunk);
+                            }
                         }
                     }
-                }
-                try { DB::statement('SET FOREIGN_KEY_CHECKS=1;'); } catch (\Exception) {}
-            });
+                });
 
-            $storageSrc = $tmpDir . '/storage';
-            if (is_dir($storageSrc)) {
-                $this->copyDirectory($storageSrc, storage_path('app/public'));
+                try { DB::statement('SET FOREIGN_KEY_CHECKS=1;'); } catch (\Exception) {};
+
+                $storageSrc = $tmpDir . '/storage';
+                if (is_dir($storageSrc)) {
+                    $this->copyDirectory($storageSrc, storage_path('app/public'));
+                }
+
+                $this->deleteDirectory($tmpDir);
+                @unlink($tarGzPath);
+
+                return response()->json(['success' => true, 'step' => 2]);
             }
 
-            $this->deleteDirectory($tmpDir);
-            @unlink($tarGzPath);
-
-            return response()->json(['success' => true]);
+            return response()->json(['error' => 'خطوة غير صالحة'], 400);
 
         } catch (\Exception $e) {
-            $this->deleteDirectory($chunkDir);
-            $this->deleteDirectory($tmpDir);
-            @unlink($tarGzPath);
+            if ($step === 2) {
+                $this->deleteDirectory($tmpDir);
+                @unlink($tarGzPath);
+            }
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

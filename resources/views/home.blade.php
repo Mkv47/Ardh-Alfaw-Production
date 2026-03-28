@@ -165,7 +165,10 @@
                     <p><i class="fas fa-map-marker-alt"></i> البصرة، العراق</p>
                 </div>
             </div>
-            <div class="footer-bottom"><p>&copy; {{ date('Y') }} شركة أرض الفاو. جميع الحقوق محفوظة.</p></div>
+            <div class="footer-bottom">
+                <p>&copy; {{ date('Y') }} شركة أرض الفاو. جميع الحقوق محفوظة.</p>
+                <p style="margin-top:6px;font-size:.82rem;opacity:.6">Developed by <a href="https://github.com/Mkv47" target="_blank" rel="noopener" style="color:inherit;opacity:1;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)">Mkv47</a></p>
+            </div>
         </div>
     </footer>
 
